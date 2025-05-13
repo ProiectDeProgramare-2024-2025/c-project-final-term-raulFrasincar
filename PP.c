@@ -62,7 +62,6 @@ void SaveData() {
     }
 }
 
-
 void clearScreen() {
     int x;
     for ( x = 0; x < 10; x++ )
@@ -144,33 +143,36 @@ void AddMatch() {
     char p1name[50],p2name[50];
     int p1score,p2score;
     scanf("%s %d / %d %s",p1name,&p1score,&p2score,p2name);
-    strcpy(matches[matchCount].p1name, p1name);
-    strcpy(matches[matchCount].p2name, p2name);
-    matches[matchCount].p1score = p1score;
-    matches[matchCount].p2score = p2score;
-    matchCount++;
+    if (p1score<0 || p1score>21 || p2score<0 || p2score>21) {
+        printf("Invalid Input\n");
+    }else {
+        strcpy(matches[matchCount].p1name, p1name);
+        strcpy(matches[matchCount].p2name, p2name);
+        matches[matchCount].p1score = p1score;
+        matches[matchCount].p2score = p2score;
+        matchCount++;
+        int idx1 = getPlayerIndex(p1name);
+        int idx2 = getPlayerIndex(p2name);
 
-    int idx1 = getPlayerIndex(p1name);
-    int idx2 = getPlayerIndex(p2name);
+        if (p1score > p2score) {
+            players[idx1].wins++;
+            players[idx2].losses++;
+        }
+        else {
+            players[idx2].wins++;
+            players[idx1].losses++;
+        }
 
-    if (p1score > p2score) {
-        players[idx1].wins++;
-        players[idx2].losses++;
-    }
-    else {
-        players[idx2].wins++;
-        players[idx1].losses++;
-    }
+        FILE *file = fopen(MATCH_FILE, "a");
+        if (file) {
+            fprintf(file, "%s,%s,%d,%d\n", p1name, p2name, p1score, p2score);
+            fclose(file);
+        }
 
-    FILE *file = fopen(MATCH_FILE, "a");
-    if (file) {
-        fprintf(file, "%s,%s,%d,%d\n", p1name, p2name, p1score, p2score);
-        fclose(file);
-    }
+        SaveData();
 
-    SaveData();
-
-    printf("Match recorded!\nPress Enter to return...");
+        printf("Match recorded!\nPress Enter to return...");
+        }
     getchar(); getchar();
 }
 
@@ -179,7 +181,10 @@ void Leaderboard() {
     struct Player temp;
     for (int i = 0; i < playerCount - 1; i++) {
         for (int j = 0; j < playerCount - i - 1; j++) {
-            if (players[j].wins < players[j + 1].wins) {
+            if (
+                players[j].wins < players[j + 1].wins ||
+                (players[j].wins == players[j + 1].wins && players[j].losses > players[j + 1].losses)
+            ) {
                 temp = players[j];
                 players[j] = players[j + 1];
                 players[j + 1] = temp;
